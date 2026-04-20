@@ -109,22 +109,9 @@ pub fn run() -> Result<()> {
 }
 
 fn is_known_subcommand(s: &str) -> bool {
-    matches!(
-        s,
-        "ls" | "list"
-            | "add"
-            | "rm"
-            | "remove"
-            | "rename"
-            | "run"
-            | "shell"
-            | "sync"
-            | "doctor"
-            | "restore"
-            | "backups"
-            | "current"
-            | "completions"
-    )
+    Cli::command()
+        .get_subcommands()
+        .any(|sc| sc.get_name() == s || sc.get_all_aliases().any(|a| a == s))
 }
 
 fn run_shortcut(name: &str, extra: &[String]) -> Result<()> {
@@ -556,25 +543,19 @@ mod tests {
     }
 
     #[test]
-    fn is_known_subcommand_list_is_exhaustive_ish() {
-        for s in &[
-            "ls",
-            "list",
-            "add",
-            "rm",
-            "remove",
-            "rename",
-            "run",
-            "shell",
-            "sync",
-            "doctor",
-            "restore",
-            "backups",
-            "current",
-            "completions",
-        ] {
-            assert!(is_known_subcommand(s), "expected {s} to be known");
+    fn is_known_subcommand_matches_clap() {
+        // Sanity: every subcommand and alias clap knows about is recognised…
+        for sc in Cli::command().get_subcommands() {
+            assert!(
+                is_known_subcommand(sc.get_name()),
+                "expected {} to be known",
+                sc.get_name()
+            );
+            for a in sc.get_all_aliases() {
+                assert!(is_known_subcommand(a), "expected alias {a} to be known");
+            }
         }
+        // …and arbitrary strings are not.
         assert!(!is_known_subcommand("company"));
         assert!(!is_known_subcommand("default"));
     }
