@@ -18,6 +18,7 @@ use anyhow::{bail, Context, Result};
 use chrono::{DateTime, Utc};
 use clap::{CommandFactory, Parser, Subcommand};
 use clap_complete::{generate, Shell};
+use inquire::Confirm;
 
 use crate::backup;
 use crate::launch;
@@ -499,15 +500,14 @@ pub fn current_profile_name(paths: &Paths) -> Option<String> {
     None
 }
 
+/// Ask the user to confirm; default is No. Cancellation (Ctrl-C/ESC) and
+/// non-TTY contexts are both treated as "no" — the tool must never delete
+/// something the user didn't explicitly agree to.
 fn confirm(prompt: &str) -> Result<bool> {
-    use io::{BufRead, Write};
-    print!("{prompt} [y/N] ");
-    io::stdout().flush().ok();
-    let stdin = io::stdin();
-    let mut line = String::new();
-    stdin.lock().read_line(&mut line)?;
-    let ans = line.trim().to_lowercase();
-    Ok(ans == "y" || ans == "yes")
+    Ok(Confirm::new(prompt)
+        .with_default(false)
+        .prompt_skippable()?
+        .unwrap_or(false))
 }
 
 #[cfg(test)]
