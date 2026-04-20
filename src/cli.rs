@@ -10,6 +10,20 @@
 //!
 //! We hand-roll the shortcut dispatch so that a bare profile name can coexist
 //! with clap-managed subcommands without either shadowing the other.
+//!
+//! Three entry paths share the same `main → run` funnel:
+//!
+//! - `run_shortcut` — triggered when `argv[1]` is not a known subcommand,
+//!   flag, or help/version token. Prepares the profile and `execve`s `claude`
+//!   directly; never returns on Unix.
+//! - `run_picker` — triggered by a bare `ccsw` with no args. Shows the TUI,
+//!   then falls through to the same launch path as the shortcut on success.
+//! - `dispatch` — triggered for every explicit subcommand (`ls`, `add`, …).
+//!   Each `Cmd` variant maps to a `cmd_*` function one-to-one.
+//!
+//! The shortcut path exists only for ergonomics; everything it does is
+//! expressible as `ccsw run <name> -- claude`. Keep it that way: any new
+//! behaviour belongs on the `Cmd::Run` side first.
 
 use std::io;
 use std::path::Path;
