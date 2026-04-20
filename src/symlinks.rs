@@ -59,6 +59,14 @@ fn strip_trailing_slash(s: &str) -> &str {
     s.strip_suffix('/').unwrap_or(s)
 }
 
+/// True if `src` has *any* entity at its path — file, directory, or broken
+/// symlink. `Path::exists` follows links and returns `false` for dangling ones,
+/// which is the wrong answer here: if the base has something by that name, we
+/// want the profile to mirror it.
+fn source_present(src: &Path) -> bool {
+    src.exists() || src.symlink_metadata().is_ok()
+}
+
 /// What happened to one allowlist entry during [`heal`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HealAction {
@@ -119,8 +127,7 @@ fn walk(base: &Path, profile: &Path, dry_run: bool) -> Result<HealReport> {
 }
 
 fn classify(src: &Path, dest: &Path, warnings: &mut Vec<String>) -> Result<HealAction> {
-    let src_exists = src.exists() || src.symlink_metadata().is_ok();
-    if !src_exists {
+    if !source_present(src) {
         return Ok(HealAction::SkippedNoSource);
     }
     match fs::symlink_metadata(dest) {
@@ -144,8 +151,7 @@ fn classify(src: &Path, dest: &Path, warnings: &mut Vec<String>) -> Result<HealA
 }
 
 fn heal_one(src: &Path, dest: &Path, warnings: &mut Vec<String>) -> Result<HealAction> {
-    let src_exists = src.exists() || src.symlink_metadata().is_ok();
-    if !src_exists {
+    if !source_present(src) {
         return Ok(HealAction::SkippedNoSource);
     }
 

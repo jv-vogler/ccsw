@@ -23,8 +23,8 @@ use crate::backup;
 use crate::launch;
 use crate::picker;
 use crate::profile::{
-    self, copy_forward_claude_json, validate_profile_name, Paths, ProfileEntry, Registry,
-    CLAUDE_JSON, DEFAULT_PROFILE,
+    self, copy_forward_claude_json, read_oauth_email, validate_profile_name, Paths, ProfileEntry,
+    Registry, CLAUDE_JSON, DEFAULT_PROFILE,
 };
 use crate::symlinks;
 
@@ -214,16 +214,6 @@ fn print_profile_row(
     let marker = if active { "*" } else { " " };
     println!("{marker} {name:<16} {email:<40} last-used: {last}");
     Ok(())
-}
-
-fn read_oauth_email(profile_dir: &Path) -> Option<String> {
-    let path = profile_dir.join(CLAUDE_JSON);
-    let bytes = std::fs::read(&path).ok()?;
-    let val: serde_json::Value = serde_json::from_slice(&bytes).ok()?;
-    val.get("oauthAccount")?
-        .get("emailAddress")?
-        .as_str()
-        .map(|s| s.to_string())
 }
 
 fn cmd_add(paths: &Paths, name: &str) -> Result<()> {

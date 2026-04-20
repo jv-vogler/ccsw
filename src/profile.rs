@@ -236,13 +236,17 @@ impl Registry {
     }
 }
 
-/// Confirm a profile directory exists on disk. `default` is always considered present
-/// (the base dir is created lazily by Claude Code itself).
-pub fn profile_dir_exists(paths: &Paths, name: &str) -> bool {
-    if name == DEFAULT_PROFILE {
-        return true;
-    }
-    paths.profile_dir(name).is_dir()
+/// Read the OAuth account email out of a profile's `.claude.json`, if present.
+///
+/// Returns `None` for any failure mode (file missing, unreadable, invalid JSON,
+/// or the expected keys absent). Used by `ls` and the picker to annotate rows.
+pub fn read_oauth_email(profile_dir: &Path) -> Option<String> {
+    let bytes = fs::read(profile_dir.join(CLAUDE_JSON)).ok()?;
+    let val: serde_json::Value = serde_json::from_slice(&bytes).ok()?;
+    val.get("oauthAccount")?
+        .get("emailAddress")?
+        .as_str()
+        .map(str::to_string)
 }
 
 /// Copy `~/.claude/.claude.json` into the new profile directory so that UI prefs,

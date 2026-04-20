@@ -10,7 +10,7 @@ use std::process::Command;
 
 use anyhow::{bail, Context, Result};
 
-use crate::profile::{self, Paths, CLAUDE_JSON, CREDENTIALS_FILE, DEFAULT_PROFILE};
+use crate::profile::{self, Paths, CREDENTIALS_FILE, DEFAULT_PROFILE};
 use crate::symlinks::{self, HealAction};
 
 pub const ENV_CONFIG_DIR: &str = "CLAUDE_CONFIG_DIR";
@@ -61,7 +61,6 @@ pub fn prepare(paths: &Paths, profile_name: &str) -> Result<LaunchPrep> {
              Run `/login` inside Claude Code to authenticate."
         );
     }
-    let _ = profile_dir.join(CLAUDE_JSON);
 
     Ok(LaunchPrep {
         profile: profile_name.to_string(),

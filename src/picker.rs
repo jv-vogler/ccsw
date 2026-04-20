@@ -6,7 +6,7 @@
 use anyhow::Result;
 use inquire::{InquireError, Select};
 
-use crate::profile::{Paths, Registry, CLAUDE_JSON, DEFAULT_PROFILE};
+use crate::profile::{read_oauth_email, Paths, Registry, DEFAULT_PROFILE};
 
 struct Item {
     name: String,
@@ -62,16 +62,6 @@ fn make_item(name: &str, dir: &std::path::Path, last_used: Option<String>) -> It
         name: name.to_string(),
         label,
     }
-}
-
-fn read_oauth_email(profile_dir: &std::path::Path) -> Option<String> {
-    let path = profile_dir.join(CLAUDE_JSON);
-    let bytes = std::fs::read(&path).ok()?;
-    let val: serde_json::Value = serde_json::from_slice(&bytes).ok()?;
-    val.get("oauthAccount")?
-        .get("emailAddress")?
-        .as_str()
-        .map(|s| s.to_string())
 }
 
 #[cfg(test)]
