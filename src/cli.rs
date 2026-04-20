@@ -222,7 +222,7 @@ fn cmd_add(paths: &Paths, name: &str) -> Result<()> {
     }
 
     std::fs::create_dir_all(&dest).with_context(|| format!("creating {}", dest.display()))?;
-    let copied = copy_forward_claude_json(&paths.base, &dest)?;
+    let copied = copy_forward_claude_json(paths, &dest)?;
     symlinks::heal(&paths.base, &dest)?;
 
     reg.upsert(ProfileEntry {

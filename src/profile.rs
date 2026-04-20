@@ -254,8 +254,8 @@ pub fn read_oauth_email(profile_dir: &Path) -> Option<String> {
 ///
 /// Missing source is not an error — the profile will simply have no `.claude.json`
 /// until `/login` runs and Claude Code writes one.
-pub fn copy_forward_claude_json(base: &Path, dest_profile_dir: &Path) -> Result<bool> {
-    let src = base.join(CLAUDE_JSON);
+pub fn copy_forward_claude_json(paths: &Paths, dest_profile_dir: &Path) -> Result<bool> {
+    let src = paths.base.join(CLAUDE_JSON);
     if !src.exists() {
         return Ok(false);
     }
@@ -357,7 +357,7 @@ mod tests {
         let (_tmp, paths) = setup();
         let prof = paths.profiles_root.join("x");
         fs::create_dir_all(&prof).unwrap();
-        let copied = copy_forward_claude_json(&paths.base, &prof).unwrap();
+        let copied = copy_forward_claude_json(&paths, &prof).unwrap();
         assert!(!copied);
     }
 
@@ -367,7 +367,7 @@ mod tests {
         fs::write(paths.base.join(CLAUDE_JSON), b"{\"k\":1}").unwrap();
         let prof = paths.profiles_root.join("x");
         fs::create_dir_all(&prof).unwrap();
-        let copied = copy_forward_claude_json(&paths.base, &prof).unwrap();
+        let copied = copy_forward_claude_json(&paths, &prof).unwrap();
         assert!(copied);
         assert_eq!(
             fs::read(prof.join(CLAUDE_JSON)).unwrap(),
