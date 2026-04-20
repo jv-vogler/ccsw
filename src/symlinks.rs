@@ -100,27 +100,28 @@ impl HealReport {
 /// The profile directory must already exist; the caller is responsible for
 /// creating it (via `ccsw add`).
 pub fn heal(base: &Path, profile: &Path) -> Result<HealReport> {
-    walk(base, profile, /* dry_run */ false)
-}
-
-/// Read-only variant of [`heal`] — reports what *would* happen without touching
-/// the filesystem. Used by `ccsw doctor`.
-pub fn diagnose(base: &Path, profile: &Path) -> Result<HealReport> {
-    walk(base, profile, /* dry_run */ true)
-}
-
-fn walk(base: &Path, profile: &Path, dry_run: bool) -> Result<HealReport> {
     let mut report = HealReport::default();
     for entry in ALLOWLIST {
         let name = strip_trailing_slash(entry);
         let src = base.join(name);
         let dest = profile.join(name);
-        let action = if dry_run {
-            classify(&src, &dest, &mut report.warnings)
-        } else {
-            heal_one(&src, &dest, &mut report.warnings)
-        }
-        .with_context(|| format!("inspecting {} in {}", name, profile.display()))?;
+        let action = heal_one(&src, &dest, &mut report.warnings)
+            .with_context(|| format!("healing {} in {}", name, profile.display()))?;
+        report.actions.push((name.to_string(), action));
+    }
+    Ok(report)
+}
+
+/// Read-only variant of [`heal`] — reports what *would* happen without touching
+/// the filesystem. Used by `ccsw doctor`.
+pub fn diagnose(base: &Path, profile: &Path) -> Result<HealReport> {
+    let mut report = HealReport::default();
+    for entry in ALLOWLIST {
+        let name = strip_trailing_slash(entry);
+        let src = base.join(name);
+        let dest = profile.join(name);
+        let action = classify(&src, &dest, &mut report.warnings)
+            .with_context(|| format!("inspecting {} in {}", name, profile.display()))?;
         report.actions.push((name.to_string(), action));
     }
     Ok(report)
