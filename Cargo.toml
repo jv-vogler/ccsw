@@ -1,11 +1,11 @@
 [package]
 name = "ccsw"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 rust-version = "1.80"
 description = "Claude Code account switcher — run multiple Claude Code accounts concurrently with shared plugins and settings"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/jv-vogler/claude-acc-switcher"
+repository = "https://github.com/jv-vogler/ccsw"
 keywords = ["claude", "cli", "profiles", "accounts"]
 categories = ["command-line-utilities"]
 
