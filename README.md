@@ -25,12 +25,18 @@ Each terminal launches `claude` pinned to one account via `CLAUDE_CONFIG_DIR`. B
 ## Install
 
 ```bash
-# From source (for now)
-cargo install --path .
-
-# From crates.io (once published)
 cargo install ccsw
 ```
+
+Or build from source:
+
+```bash
+git clone https://github.com/jv-vogler/claude-acc-switcher
+cd claude-acc-switcher
+cargo install --path .
+```
+
+Requires Rust 1.80+.
 
 ## Quickstart
 
