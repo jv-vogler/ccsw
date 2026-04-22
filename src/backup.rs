@@ -58,12 +58,14 @@ fn ensure_backups_root(paths: &Paths) -> Result<PathBuf> {
     Ok(root)
 }
 
-/// Capture the profile directory into a new snapshot. Returns the snapshot.
+/// Capture a profile directory — or a single file — into a new snapshot.
 ///
-/// If `profile_dir` does not exist (e.g. pre-create), the payload will be an
-/// empty directory and the meta still records the op — this is intentional so
-/// the operation itself is reversible.
-pub fn snapshot(paths: &Paths, profile_dir: &Path, op: &str, name: &str) -> Result<Snapshot> {
+/// If `src` does not exist (e.g. pre-create), the payload will be an empty
+/// directory and the meta still records the op — this is intentional so the
+/// operation itself is reversible. A file source is copied into the payload
+/// preserving its filename; this is used for registry-only snapshots, where
+/// snapshotting the whole `profiles_root` would recurse into `.backups/`.
+pub fn snapshot(paths: &Paths, src: &Path, op: &str, name: &str) -> Result<Snapshot> {
     let root = ensure_backups_root(paths)?;
     let created_at = Utc::now();
     let id = format!("{}-{}-{}", format_ts(created_at), op, name);
@@ -72,9 +74,15 @@ pub fn snapshot(paths: &Paths, profile_dir: &Path, op: &str, name: &str) -> Resu
 
     let payload = dest.join(PAYLOAD_DIR);
     fs::create_dir_all(&payload)?;
-    if profile_dir.is_dir() {
-        copy_tree_preserving_symlinks(profile_dir, &payload)
-            .with_context(|| format!("snapshotting {}", profile_dir.display()))?;
+    if src.is_dir() {
+        copy_tree_preserving_symlinks(src, &payload)
+            .with_context(|| format!("snapshotting {}", src.display()))?;
+    } else if src.is_file() {
+        let file_name = src
+            .file_name()
+            .ok_or_else(|| anyhow!("{} has no file name", src.display()))?;
+        fs::copy(src, payload.join(file_name))
+            .with_context(|| format!("snapshotting {}", src.display()))?;
     }
 
     let meta = SnapshotMeta {
@@ -282,6 +290,28 @@ mod tests {
         std::os::unix::fs::symlink(paths.base.join("settings.json"), dir.join("settings.json"))
             .unwrap();
         dir
+    }
+
+    #[test]
+    fn snapshot_from_file_puts_only_that_file_in_payload() {
+        let (_tmp, paths) = setup();
+        // Seed the registry file and snapshot it by path.
+        let registry = paths.registry_file();
+        fs::write(&registry, br#"{"version":1,"profiles":[]}"#).unwrap();
+
+        let snap = snapshot(&paths, &registry, "pre-add", "work").unwrap();
+
+        let payload = snap.payload();
+        assert!(payload.is_dir());
+        let entries: Vec<_> = fs::read_dir(&payload)
+            .unwrap()
+            .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+            .collect();
+        assert_eq!(entries, vec![".ccsw.json"]);
+        assert_eq!(
+            fs::read(payload.join(".ccsw.json")).unwrap(),
+            br#"{"version":1,"profiles":[]}"#.to_vec()
+        );
     }
 
     #[test]

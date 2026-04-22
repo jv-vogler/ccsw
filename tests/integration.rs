@@ -100,6 +100,30 @@ fn add_rejects_duplicate() {
 }
 
 #[test]
+fn add_second_profile_with_existing_registry() {
+    // Regression: pre-add snapshot used to pass `profiles_root` to
+    // `backup::snapshot`, which recursively copied `.backups/` into itself
+    // until the path exceeded PATH_MAX ("File name too long", os error 36).
+    let env = setup();
+    ccsw(&env).args(["add", "work"]).assert().success();
+    ccsw(&env).args(["add", "play"]).assert().success();
+
+    assert!(profile_dir(&env, "work").is_dir());
+    assert!(profile_dir(&env, "play").is_dir());
+    // A pre-add snapshot was taken for the second add.
+    let backups_root = env.profiles_root.join(".backups");
+    let ids: Vec<String> = fs::read_dir(&backups_root)
+        .unwrap()
+        .filter_map(|e| e.ok())
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .collect();
+    assert!(
+        ids.iter().any(|id| id.contains("pre-add-play")),
+        "expected pre-add-play snapshot, got {ids:?}"
+    );
+}
+
+#[test]
 fn add_rejects_reserved_default() {
     let env = setup();
     ccsw(&env)

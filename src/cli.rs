@@ -231,8 +231,11 @@ fn cmd_add(paths: &Paths, name: &str) -> Result<()> {
     }
 
     // Snapshot the registry file only (covers rollback of corrupt registry state).
-    if paths.registry_file().exists() {
-        backup::snapshot(paths, &paths.profiles_root, "pre-add", name)?;
+    // Passing `profiles_root` here would recurse through `.backups/` into the
+    // in-progress snapshot payload until PATH_MAX (errno 36, ENAMETOOLONG).
+    let registry = paths.registry_file();
+    if registry.exists() {
+        backup::snapshot(paths, &registry, "pre-add", name)?;
     }
 
     std::fs::create_dir_all(&dest).with_context(|| format!("creating {}", dest.display()))?;
