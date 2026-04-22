@@ -37,6 +37,10 @@ pub const ALLOWLIST: &[&str] = &[
     "plans/",
     "tasks/",
     "session-env/",
+    // Conversation transcripts. Shared so a session started on one profile
+    // can be `/resume`d from any other — handy when you hit a rate limit
+    // mid-task and want to continue on a different account.
+    "projects/",
     // History lives at the top level
     "history.jsonl",
 ];
@@ -46,7 +50,6 @@ pub const ALLOWLIST: &[&str] = &[
 pub const PER_PROFILE_KEEP: &[&str] = &[
     ".credentials.json",
     ".claude.json",
-    "projects/",
     "sessions/",
     "backups/",
     "debug/",

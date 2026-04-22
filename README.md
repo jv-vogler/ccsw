@@ -105,11 +105,13 @@ ccsw completions fish > ~/.config/fish/completions/ccsw.fish
 
 ### Shared (symlinks into `~/.claude`)
 
-`settings.json`, `CLAUDE.md`, `RTK.md`, `keybindings.json`, `hooks/`, `plugins/`, `agents/`, `skills/`, `rules/`, `ide/`, `history.jsonl`, `shell-snapshots/`, `paste-cache/`, `cache/`, `downloads/`, `file-history/`, `plans/`, `tasks/`, `session-env/`.
+`settings.json`, `CLAUDE.md`, `RTK.md`, `keybindings.json`, `hooks/`, `plugins/`, `agents/`, `skills/`, `rules/`, `ide/`, `history.jsonl`, `shell-snapshots/`, `paste-cache/`, `cache/`, `downloads/`, `file-history/`, `plans/`, `tasks/`, `session-env/`, `projects/`.
+
+Sharing `projects/` means conversation transcripts are visible across every profile, so `/resume` works after switching accounts — useful when one account hits a rate limit mid-task.
 
 ### Per-profile (never symlinked)
 
-`.credentials.json`, `.claude.json`, `projects/`, `sessions/`, `backups/`, `debug/`, `telemetry/`, `usage-data/`, `mcp-needs-auth-cache.json`.
+`.credentials.json`, `.claude.json`, `sessions/`, `backups/`, `debug/`, `telemetry/`, `usage-data/`, `mcp-needs-auth-cache.json`.
 
 ### Override an entry per-profile
 
